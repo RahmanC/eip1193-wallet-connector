@@ -29,6 +29,7 @@ export const useWalletConnection = () => {
     } else {
       alert("Please install a wallet");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateWalletState = useCallback(async (address: string) => {
