@@ -14,6 +14,7 @@ declare global {
 import React, { useState } from "react";
 import { useWalletConnection } from "./hooks/useWalletConnection";
 import SingleRow from "./components/SingleRow";
+import { useGetNetwork } from "./hooks/useGetNetwork";
 
 const App: React.FC = () => {
   const {
@@ -23,9 +24,12 @@ const App: React.FC = () => {
     isConnected,
     connectWallet,
     disconnectWallet,
+    fetchBalance,
   } = useWalletConnection();
   const [inputAddress, setInputAddress] = useState("");
   const [inputBalance, setInputBalance] = useState("");
+
+  const networkName = useGetNetwork(chainId);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputAddress(e.target.value);
@@ -33,16 +37,8 @@ const App: React.FC = () => {
 
   const handleCheckBalance = async () => {
     if (typeof window.ethereum !== "undefined" && inputAddress) {
-      try {
-        const balance = await window.ethereum.request({
-          method: "eth_getBalance",
-          params: [inputAddress, "latest"],
-        });
-        setInputBalance(parseInt(balance, 16).toString());
-      } catch (err: any) {
-        console.error(err.message);
-        setInputBalance("Error fetching balance");
-      }
+      const balance = await fetchBalance(inputAddress);
+      setInputBalance(balance);
     }
   };
 
@@ -65,20 +61,23 @@ const App: React.FC = () => {
       </div>
 
       {isConnected && (
-        <div className=" border border-neutral-400 p-5 w-full">
+        <div className="flex flex-col gap-3 border border-neutral-400 p-5 w-full">
           <SingleRow label="Connected Address" value={address} />
-          <SingleRow label="Balance" value={balance} />
+          <SingleRow label="Balance" unit="wei" value={balance} />
+          <SingleRow label="Network" value={networkName} />
           <SingleRow label="Chain ID" value={chainId} />
         </div>
       )}
 
-      <button
-        type="button"
-        className="bg-red-400 text-white text-lg font-medium rounded-md px-4 py-2 w-max my-8"
-        onClick={disconnectWallet}
-      >
-        Disconnect Wallet
-      </button>
+      {isConnected && (
+        <button
+          type="button"
+          className="bg-red-400 text-white text-lg font-medium rounded-md px-4 py-2 w-max my-8"
+          onClick={disconnectWallet}
+        >
+          Disconnect Wallet
+        </button>
+      )}
 
       <div className="w-full border-t border-t-neutral-300 border-dashed">
         <h2 className="text-center text-2xl font-medium my-2">
@@ -101,9 +100,11 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        <div className="border border-neutral-200 p-3">
-          {inputBalance && <SingleRow label="Balance" value={inputBalance} />}
-        </div>
+        {inputBalance && (
+          <div className=" border border-neutral-400 p-5 w-full">
+            <SingleRow label="Balance" unit="wei" value={inputBalance} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -65,6 +65,22 @@ export const useWalletConnection = () => {
     });
   }, []);
 
+  const fetchBalance = useCallback(async (address: string) => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const balance = await window.ethereum.request({
+          method: "eth_getBalance",
+          params: [address, "latest"],
+        });
+        return parseInt(balance, 16).toString();
+      } catch (err: any) {
+        console.error(err.message);
+        return "Error fetching balance";
+      }
+    }
+    return "Wallet not connected";
+  }, []);
+
   useEffect(() => {
     const checkConnection = async () => {
       if (typeof window.ethereum !== "undefined") {
@@ -111,5 +127,6 @@ export const useWalletConnection = () => {
     ...walletState,
     connectWallet,
     disconnectWallet,
+    fetchBalance,
   };
 };
