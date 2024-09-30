@@ -1,36 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { WalletContext } from "./WalletContext";
 
-interface WalletState {
-  address: string;
-  balance: string;
-  chainId: string;
-  isConnected: boolean;
-}
-
-export const useWalletConnection = () => {
+export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [walletState, setWalletState] = useState<WalletState>({
     address: "",
     balance: "",
     chainId: "",
     isConnected: false,
   });
-
-  const connectWallet = useCallback(async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        await updateWalletState(accounts[0]);
-      } catch (err: any) {
-        console.error(err.message);
-      }
-    } else {
-      alert("Please install a wallet");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const updateWalletState = useCallback(async (address: string) => {
     if (address) {
@@ -56,6 +35,21 @@ export const useWalletConnection = () => {
     }
   }, []);
 
+  const connectWallet = useCallback(async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        await updateWalletState(accounts[0]);
+      } catch (err: unknown) {
+        console.error((err as Error).message);
+      }
+    } else {
+      alert("Please install a wallet");
+    }
+  }, [updateWalletState]);
+
   const disconnectWallet = useCallback(() => {
     setWalletState({
       address: "",
@@ -73,8 +67,8 @@ export const useWalletConnection = () => {
           params: [address, "latest"],
         });
         return parseInt(balance, 16).toString();
-      } catch (err: any) {
-        console.error(err.message);
+      } catch (err: unknown) {
+        console.error((err as Error).message);
         return "Error fetching balance";
       }
     }
@@ -123,10 +117,16 @@ export const useWalletConnection = () => {
     };
   }, [updateWalletState, disconnectWallet]);
 
-  return {
-    ...walletState,
-    connectWallet,
-    disconnectWallet,
-    fetchBalance,
-  };
+  return (
+    <WalletContext.Provider
+      value={{
+        ...walletState,
+        connectWallet,
+        disconnectWallet,
+        fetchBalance,
+      }}
+    >
+      {children}
+    </WalletContext.Provider>
+  );
 };
