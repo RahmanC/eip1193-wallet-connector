@@ -1,20 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: Array<any> }) => Promise<any>;
-      on: (eventName: string, callback: (accounts: string[]) => void) => void;
-      removeListener: any;
-    };
-  }
-}
-
 import React, { useState } from "react";
-import { useWalletConnection } from "./hooks/useWalletConnection";
 import SingleRow from "./components/SingleRow";
 import { useGetNetwork } from "./hooks/useGetNetwork";
+import { useWallet } from "./hooks/useWallet";
 
 const App: React.FC = () => {
   const {
@@ -25,7 +12,8 @@ const App: React.FC = () => {
     connectWallet,
     disconnectWallet,
     fetchBalance,
-  } = useWalletConnection();
+  } = useWallet();
+
   const [inputAddress, setInputAddress] = useState("");
   const [inputBalance, setInputBalance] = useState("");
 
